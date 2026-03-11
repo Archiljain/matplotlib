@@ -10192,9 +10192,6 @@ def test_errorbar_uses_rcparams():
 
 
 def test_relim_updates_scatter_offsets():
-    import numpy as np
-    import matplotlib.pyplot as plt
-
     fig, ax = plt.subplots()
 
     xs = np.linspace(0, 10, 100)
