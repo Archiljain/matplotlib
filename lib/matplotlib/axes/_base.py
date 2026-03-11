@@ -1722,12 +1722,21 @@ class _AxesBase(martist.Artist):
         share : bool, default: False
             If ``True``, apply the settings to all shared Axes.
 
+        Notes
+        -----
+        The aspect will require an update of the Axes position or limits (which
+        one depends on *adjustable*). This update is applied lazily, the latest
+        when the figure is drawn. Use `.apply_aspect` to force an update.
+
         See Also
         --------
         matplotlib.axes.Axes.set_adjustable
             Set how the Axes adjusts to achieve the required aspect ratio.
         matplotlib.axes.Axes.set_anchor
             Set the position in case of extra space.
+        matplotlib.axes.Axes.apply_aspect
+            Force the update required to meet the aspect ratio to happen
+            immediately.
         """
         if cbook._str_equal(aspect, 'equal'):
             aspect = 1
@@ -2467,6 +2476,20 @@ class _AxesBase(martist.Artist):
         txt._remove_method = self._children.remove
         self.stale = True
         return txt
+
+    def _point_in_data_domain(self, x, y):
+        """
+        Check if the data point (x, y) is within the valid domain of the axes
+        scales.
+
+        Returns False if the point is outside the data range
+        (e.g. negative coordinates with a log scale).
+        """
+        for val, axis in zip([x, y], self._axis_map.values()):
+            vmin, vmax = axis.limit_range_for_scale(val, val)
+            if vmin != val or vmax != val:
+                return False
+        return True
 
     def _update_line_limits(self, line):
         """
