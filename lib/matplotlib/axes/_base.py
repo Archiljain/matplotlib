@@ -29,6 +29,7 @@ import matplotlib.table as mtable
 import matplotlib.text as mtext
 import matplotlib.ticker as mticker
 import matplotlib.transforms as mtransforms
+import matplotlib.collections as mcollections
 
 _log = logging.getLogger(__name__)
 
@@ -1132,6 +1133,11 @@ class _AxesBase(martist.Artist):
         self.transScale.set(
             mtransforms.blended_transform_factory(
                 self.xaxis.get_transform(), self.yaxis.get_transform()))
+
+    def _update_collection_limits(self, collection):
+     offsets = collection.get_offsets()
+     if offsets is not None and len(offsets):
+        self.update_datalim(offsets)
 
     def get_position(self, original=False):
         """
@@ -2412,6 +2418,7 @@ class _AxesBase(martist.Artist):
                 self._request_autoscale_view()
 
         self.stale = True
+        collection._set_in_autoscale(autolim)
         return collection
 
     def add_image(self, image):
@@ -2626,6 +2633,8 @@ class _AxesBase(martist.Artist):
                     self._update_patch_limits(artist)
                 elif isinstance(artist, mimage.AxesImage):
                     self._update_image_limits(artist)
+                elif isinstance(artist, mcollections.Collection):
+                    self._update_collection_limits(artist)
 
     def update_datalim(self, xys, updatex=True, updatey=True):
         """
