@@ -1133,31 +1133,6 @@ class _AxesBase(martist.Artist):
             mtransforms.blended_transform_factory(
                 self.xaxis.get_transform(), self.yaxis.get_transform()))
 
-    def _update_collection_limits(self, collection, autolim):
-        self._unstale_viewLim()
-
-        datalim = collection.get_datalim(self.transData)
-        points = datalim.get_points()
-
-        if not np.isinf(datalim.minpos).all():
-            points = np.concatenate([points, [datalim.minpos]])
-
-        x_is_data, y_is_data = (
-            collection.get_transform().contains_branch_separately(self.transData)
-       )
-        ox_is_data, oy_is_data = (
-             collection.get_offset_transform().contains_branch_separately(self.transData)
-       )
-
-        self.update_datalim(
-         points,
-         updatex=x_is_data or ox_is_data,
-         updatey=y_is_data or oy_is_data,
-       )
-
-        if autolim != "_datalim_only":
-            self._request_autoscale_view()
-
     def get_position(self, original=False):
         """
         Return the position of the Axes within the figure as a `.Bbox`.
@@ -2425,6 +2400,44 @@ class _AxesBase(martist.Artist):
 
         self.stale = True
         return collection
+
+    def _update_collection_limits(self, collection, autolim):
+        """
+        Update Axes data limits using the data from a Collection.
+
+        This helper extracts the limit update logic previously embedded
+        in `Axes.add_collection`. It ensures that collections participating
+        in autoscaling correctly contribute their data limits to the Axes.
+
+        Parameters
+        ----------
+        collection : matplotlib.collections.Collection
+        The collection whose data limits should be incorporated into
+        the Axes data limits.
+        """
+        self._unstale_viewLim()
+
+        datalim = collection.get_datalim(self.transData)
+        points = datalim.get_points()
+
+        if not np.isinf(datalim.minpos).all():
+            points = np.concatenate([points, [datalim.minpos]])
+
+        x_is_data, y_is_data = (
+            collection.get_transform().contains_branch_separately(self.transData)
+       )
+        ox_is_data, oy_is_data = (
+             collection.get_offset_transform().contains_branch_separately(self.transData)
+       )
+
+        self.update_datalim(
+         points,
+         updatex=x_is_data or ox_is_data,
+         updatey=y_is_data or oy_is_data,
+       )
+
+        if autolim != "_datalim_only":
+            self._request_autoscale_view()
 
     def add_image(self, image):
         """
